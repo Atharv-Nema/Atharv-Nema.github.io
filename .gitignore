@@ -26,4 +26,4 @@ pnpm-debug.log*
 .idea/
 
 # working notes, not part of the site
-PROMPT.txt
+src/content/blog/writing-posts.mdx
