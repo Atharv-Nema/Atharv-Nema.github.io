@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Edit this list and the page updates. Delete any row you don't want.
+// `note` is optional.
+const links = [
+	{ label: 'Email', value: 'atharvnema12@gmail.com', url: 'mailto:atharvnema12@gmail.com' },
+	{ label: 'GitHub', value: '@Atharv-Nema', url: 'https://github.com/Atharv-Nema' },
+	{ label: 'LinkedIn', value: 'TODO', url: '#', note: 'add your profile URL' },
+	{ label: 'Twitter / X', value: 'TODO', url: '#', note: 'or delete this row' },
+];
+---
+
+<BaseLayout
+	title="Contact — Atharv Nema"
+	description="How to get in touch with Atharv Nema."
+>
+	<h1>Contact</h1>
+
+	<p>
+		TODO — a line about what you would like to be contacted regarding, and
+		roughly how quickly you reply.
+	</p>
+
+	<dl class="contact-list">
+		{
+			links.map((link) => (
+				<div class="contact-row">
+					<dt>{link.label}</dt>
+					<dd>
+						{link.url === '#' ? (
+							<span class="pending">{link.value}</span>
+						) : (
+							<a href={link.url}>{link.value}</a>
+						)}
+						{link.note && <span class="note"> — {link.note}</span>}
+					</dd>
+				</div>
+			))
+		}
+	</dl>
+</BaseLayout>
+
+{/*
+  A <style> block inside a .astro file is automatically SCOPED: these rules only
+  ever apply to this page, so you can use a plain class name like `.note`
+  without worrying that it collides with something elsewhere in the site.
+  Site-wide rules belong in src/styles/global.css instead.
+*/}
+<style>
+	.contact-list {
+		margin: 2rem 0 0;
+	}
+
+	.contact-row {
+		display: grid;
+		grid-template-columns: 8rem 1fr;
+		gap: 1rem;
+		padding-block: 0.85rem;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.contact-row:first-child {
+		border-top: 1px solid var(--rule);
+	}
+
+	dt {
+		font-weight: 600;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+		padding-top: 0.1rem;
+	}
+
+	dd {
+		margin: 0;
+	}
+
+	.pending {
+		color: var(--ink-soft);
+	}
+
+	.note {
+		color: var(--ink-soft);
+		font-size: 0.875rem;
+	}
+
+	/* Below 34rem wide, stack the label above the value instead of beside it. */
+	@media (max-width: 34rem) {
+		.contact-row {
+			grid-template-columns: 1fr;
+			gap: 0.15rem;
+		}
+	}
+</style>

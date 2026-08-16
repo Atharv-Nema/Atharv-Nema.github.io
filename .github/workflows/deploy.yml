@@ -1,0 +1,55 @@
+# Builds the site and publishes it to GitHub Pages on every push to main.
+#
+# One-time setup on GitHub before this can work:
+#   Repo -> Settings -> Pages -> "Build and deployment" -> Source: GitHub Actions
+#
+# After that, every `git push` rebuilds and redeploys automatically. Watch runs
+# under the repo's "Actions" tab.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Lets you trigger a deploy by hand from the Actions tab.
+  workflow_dispatch:
+
+# Permissions the job needs in order to publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# If you push twice quickly, let the first deploy finish rather than cancelling
+# it — half-deployed sites are worse than slightly stale ones.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Installs Node, runs `npm ci` and `astro build`, then uploads dist/ as a
+      # Pages artifact for the deploy job below.
+      #
+      # Keep node-version in sync with .nvmrc and package.json "engines" by hand
+      # — this action has no node-version-file input, so it cannot read .nvmrc.
+      - name: Build with Astro
+        uses: withastro/action@v3
+        with:
+          node-version: 22
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

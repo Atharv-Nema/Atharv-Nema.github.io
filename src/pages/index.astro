@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { href } from '../lib/urls';
+
+// Show the three most recent posts on the home page.
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const recent = posts.slice(0, 3);
+
+const dateFmt = new Intl.DateTimeFormat('en-GB', {
+	year: 'numeric',
+	month: 'short',
+	day: 'numeric',
+});
+---
+
+<BaseLayout title="Atharv Nema">
+	<h1>Atharv Nema</h1>
+
+	{/* TODO: replace this with a real one-line description of yourself. */}
+	<p style="font-size: 1.15rem; color: var(--ink-soft);">
+		TODO — one sentence on who you are and what you work on.
+	</p>
+
+	<h2>About</h2>
+	<p>
+		TODO — a couple of paragraphs. What you study or work on, what problems
+		you find interesting, what you have built.
+	</p>
+
+	<h2>Currently</h2>
+	<ul>
+		<li>TODO — something you are working on</li>
+		<li>TODO — something you are learning</li>
+		<li>TODO — something you are reading</li>
+	</ul>
+
+	{
+		recent.length > 0 && (
+			<>
+				<h2>Recent writing</h2>
+				<ul class="post-list">
+					{recent.map((post) => (
+						<li>
+							<p class="post-meta">
+								<time datetime={post.data.pubDate.toISOString()}>
+									{dateFmt.format(post.data.pubDate)}
+								</time>
+							</p>
+							<h2>
+								<a href={href(`/blog/${post.id}`)}>{post.data.title}</a>
+							</h2>
+							<p>{post.data.description}</p>
+						</li>
+					))}
+				</ul>
+				<p style="margin-top: 1.5rem;">
+					<a href={href('/blog')}>All posts &rarr;</a>
+				</p>
+			</>
+		)
+	}
+</BaseLayout>

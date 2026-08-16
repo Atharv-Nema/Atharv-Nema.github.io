@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { href } from '../../lib/urls';
+
+// getCollection reads every file in src/content/blog/. The second argument
+// filters out drafts, so `draft: true` posts never reach the built site.
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const dateFmt = new Intl.DateTimeFormat('en-GB', {
+	year: 'numeric',
+	month: 'short',
+	day: 'numeric',
+});
+---
+
+<BaseLayout
+	title="Blog — Atharv Nema"
+	description="Technical writing by Atharv Nema."
+>
+	<h1>Blog</h1>
+	<p>TODO — a line about what you write about here.</p>
+
+	{
+		posts.length === 0 ? (
+			<p>No posts yet.</p>
+		) : (
+			<ul class="post-list">
+				{posts.map((post) => (
+					<li>
+						<p class="post-meta">
+							<time datetime={post.data.pubDate.toISOString()}>
+								{dateFmt.format(post.data.pubDate)}
+							</time>
+							{post.data.tags.map((tag) => (
+								<span class="tag">{tag}</span>
+							))}
+						</p>
+						<h2>
+							<a href={href(`/blog/${post.id}`)}>{post.data.title}</a>
+						</h2>
+						<p>{post.data.description}</p>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</BaseLayout>

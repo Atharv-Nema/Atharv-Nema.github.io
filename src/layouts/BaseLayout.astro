@@ -1,0 +1,101 @@
+---
+/**
+ * The shell every page sits inside: <head>, the nav bar, and the footer.
+ * Write it once here and all pages stay in sync.
+ *
+ * Everything between the `---` fences is "frontmatter" — JavaScript that runs
+ * at BUILD time on your machine, never in the visitor's browser.
+ */
+import { href, isCurrent } from '../lib/urls';
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = 'Personal site and blog of Atharv Nema.' } =
+	Astro.props;
+
+// No "Home" entry: the site name on the left links home, which is what people
+// reflexively click anyway. This keeps the nav a list of what's on the site.
+const nav = [
+	{ label: 'Blog', path: '/blog' },
+	{ label: 'Contact', path: '/contact' },
+];
+
+const here = Astro.url.pathname;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href={href('/favicon.svg')} />
+		<meta name="generator" content={Astro.generator} />
+
+		<title>{title}</title>
+		<meta name="description" content={description} />
+
+		{/* Open Graph: what shows up when the page is pasted into Slack, WhatsApp,
+		    Discord, etc. Cheap to add, looks bad when missing. */}
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+	</head>
+
+	<body>
+		<header class="site-header">
+			<div class="wrap">
+				<a class="site-title" href={href('/')}>Atharv Nema</a>
+				<nav class="site-nav">
+					{
+						nav.map((item) => (
+							<a
+								href={href(item.path)}
+								aria-current={isCurrent(here, item.path) ? 'page' : undefined}
+							>
+								{item.label}
+							</a>
+						))
+					}
+				</nav>
+			</div>
+		</header>
+
+		<main class="wrap">
+			{/* <slot /> is where each page's own content gets injected. */}
+			<slot />
+		</main>
+
+		<footer class="site-footer">
+			<div class="wrap">
+				<p>&copy; {new Date().getFullYear()} Atharv Nema</p>
+			</div>
+		</footer>
+
+		<script>
+			// Scroll-triggered fade-in for anything with class="reveal".
+			//
+			// IntersectionObserver is the browser's built-in "tell me when this
+			// element enters the viewport" API — far cheaper than listening to
+			// every scroll event. This is the whole animation system for now; no
+			// library needed.
+			const targets = document.querySelectorAll('.reveal');
+
+			const observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						if (!entry.isIntersecting) continue;
+						entry.target.classList.add('is-visible');
+						observer.unobserve(entry.target); // animate once, then stop watching
+					}
+				},
+				// Fire slightly before the element is fully on screen.
+				{ rootMargin: '0px 0px -10% 0px' },
+			);
+
+			targets.forEach((el) => observer.observe(el));
+		</script>
+	</body>
+</html>

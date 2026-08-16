@@ -1,0 +1,142 @@
+---
+/**
+ * An interactive figure: two sliders redraw an SVG curve in real time.
+ *
+ * This exists as a worked example of the pattern you'll reuse for every
+ * interactive diagram — plain SVG, a couple of inputs, ~30 lines of vanilla
+ * JavaScript. No React, no charting library, no dependencies.
+ *
+ * Drop it into a post with:
+ *   <SineWave frequency={2} amplitude={30} />
+ */
+interface Props {
+	frequency?: number;
+	amplitude?: number;
+	caption?: string;
+}
+
+const {
+	frequency = 2,
+	amplitude = 30,
+	caption = 'Drag the sliders to change the wave.',
+} = Astro.props;
+---
+
+<figure class="figure" data-sine>
+	<svg viewBox="0 0 400 120" role="img" aria-label="An adjustable sine wave">
+		{/* Horizontal axis */}
+		<line x1="0" y1="60" x2="400" y2="60" class="axis"></line>
+		{/* The curve itself; its `d` attribute is rewritten by the script */}
+		<path class="curve" data-curve fill="none"></path>
+	</svg>
+
+	<div class="controls">
+		<label>
+			Frequency
+			<input type="range" min="0.5" max="6" step="0.1" value={frequency} data-freq />
+			<output data-freq-out>{frequency}</output>
+		</label>
+		<label>
+			Amplitude
+			<input type="range" min="5" max="55" step="1" value={amplitude} data-amp />
+			<output data-amp-out>{amplitude}</output>
+		</label>
+	</div>
+
+	<figcaption>{caption}</figcaption>
+</figure>
+
+<script>
+	// An Astro component's <script> is bundled once for the whole page, even if
+	// the component appears several times. So rather than assuming a single
+	// instance, find them all and wire each one up independently.
+	document.querySelectorAll<HTMLElement>('[data-sine]').forEach((root) => {
+		const curve = root.querySelector<SVGPathElement>('[data-curve]')!;
+		const freq = root.querySelector<HTMLInputElement>('[data-freq]')!;
+		const amp = root.querySelector<HTMLInputElement>('[data-amp]')!;
+		const freqOut = root.querySelector<HTMLOutputElement>('[data-freq-out]')!;
+		const ampOut = root.querySelector<HTMLOutputElement>('[data-amp-out]')!;
+
+		function draw() {
+			const f = Number(freq.value);
+			const a = Number(amp.value);
+
+			// Sample the curve at 100 points across the 400-unit viewBox and join
+			// them into an SVG path: "M x,y L x,y L x,y ..."
+			const points: string[] = [];
+			for (let i = 0; i <= 100; i++) {
+				const x = (i / 100) * 400;
+				const y = 60 - a * Math.sin((i / 100) * f * 2 * Math.PI);
+				points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+			}
+
+			curve.setAttribute('d', `M${points.join(' L')}`);
+			freqOut.textContent = f.toFixed(1);
+			ampOut.textContent = String(a);
+		}
+
+		freq.addEventListener('input', draw);
+		amp.addEventListener('input', draw);
+		draw(); // draw once on load
+	});
+</script>
+
+<style>
+	.figure {
+		margin: 2rem 0;
+		padding: 1rem;
+		border: 1px solid var(--rule);
+		border-radius: 8px;
+		background: var(--surface);
+	}
+
+	svg {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
+	.axis {
+		stroke: var(--rule);
+		stroke-width: 1;
+	}
+
+	.curve {
+		stroke: var(--accent);
+		stroke-width: 2.5;
+		stroke-linecap: round;
+	}
+
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin-top: 0.75rem;
+	}
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+
+	input[type='range'] {
+		accent-color: var(--accent);
+		width: 7rem;
+	}
+
+	output {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		min-width: 2.2rem;
+		color: var(--ink);
+	}
+
+	figcaption {
+		margin-top: 0.75rem;
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+</style>

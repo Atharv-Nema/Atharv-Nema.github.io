@@ -1,0 +1,318 @@
+/* ==========================================================================
+   Design tokens
+   --------------------------------------------------------------------------
+   Every colour and size in the site is defined once, here, as a CSS custom
+   property (a "variable"). Elsewhere we only ever write var(--ink) etc.
+   Change a value here and it updates everywhere.
+   ========================================================================== */
+
+:root {
+	/* Light theme */
+	--bg: #fdfdfc;
+	--surface: #f4f3f0; /* slightly raised areas: code blocks, cards */
+	--ink: #1c1b19; /* body text */
+	--ink-soft: #5c5952; /* dates, captions, secondary text */
+	--rule: #e2e0da; /* borders and separators */
+	--accent: #9a3412; /* links and highlights */
+	--accent-soft: #fdf0e9; /* accent used as a background wash */
+
+	/* Type. A system font stack means no web font download, so no flash of
+	   unstyled text and nothing to host. */
+	--font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+		'Helvetica Neue', Arial, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+		'Liberation Mono', monospace;
+
+	/* One number controls the reading width of every page. ~68 characters per
+	   line is the usual sweet spot for prose. */
+	--measure: 44rem;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #17161a;
+		--surface: #211f26;
+		--ink: #e8e6e3;
+		--ink-soft: #a09aa8;
+		--rule: #322f38;
+		--accent: #f0916a;
+		--accent-soft: #2a1f1c;
+	}
+}
+
+/* ==========================================================================
+   Base elements
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box; /* widths include padding — far more predictable */
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: 1.05rem;
+	line-height: 1.7; /* generous leading; this is a reading site */
+	-webkit-font-smoothing: antialiased;
+}
+
+/* The single column everything sits in. */
+.wrap {
+	width: 100%;
+	max-width: var(--measure);
+	margin-inline: auto; /* centres it */
+	padding-inline: 1.5rem;
+}
+
+h1,
+h2,
+h3 {
+	line-height: 1.25;
+	letter-spacing: -0.015em;
+	margin: 2.5rem 0 0.75rem;
+	text-wrap: balance; /* stops a lone word dangling on its own line */
+}
+
+h1 {
+	font-size: clamp(1.9rem, 1.3rem + 2.4vw, 2.6rem); /* scales with viewport */
+	margin-top: 0;
+}
+h2 {
+	font-size: 1.45rem;
+}
+h3 {
+	font-size: 1.15rem;
+}
+
+p,
+ul,
+ol {
+	margin: 0 0 1.15rem;
+}
+
+a {
+	color: var(--accent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+}
+a:hover {
+	text-decoration-thickness: 2px;
+}
+
+/* Inline `code` */
+code {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+	background: var(--surface);
+	padding: 0.15em 0.4em;
+	border-radius: 4px;
+}
+
+/* Fenced code blocks. Astro syntax-highlights these at build time. */
+pre {
+	background: var(--surface) !important;
+	padding: 1rem 1.15rem;
+	border-radius: 8px;
+	border: 1px solid var(--rule);
+	overflow-x: auto; /* long lines scroll instead of breaking the layout */
+}
+pre code {
+	background: none;
+	padding: 0;
+	font-size: 0.875rem;
+}
+
+blockquote {
+	margin: 1.5rem 0;
+	padding: 0.25rem 0 0.25rem 1.15rem;
+	border-left: 3px solid var(--accent);
+	color: var(--ink-soft);
+	font-style: italic;
+}
+
+img {
+	max-width: 100%;
+	height: auto; /* never let an image overflow its column */
+	border-radius: 6px;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid var(--rule);
+	margin: 3rem 0;
+}
+
+/* ==========================================================================
+   Site header + footer
+   ========================================================================== */
+
+.site-header {
+	border-bottom: 1px solid var(--rule);
+	padding-block: 1.25rem;
+	margin-bottom: 3rem;
+}
+
+.site-header .wrap {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1.5rem;
+	align-items: baseline;
+	justify-content: space-between;
+}
+
+/* The site name, top left. It links home, but shouldn't look like body-copy
+   link — hence the ink colour and no underline. */
+.site-title {
+	font-weight: 650;
+	font-size: 1.05rem;
+	color: var(--ink);
+	text-decoration: none;
+	letter-spacing: -0.01em;
+}
+
+.site-title:hover {
+	color: var(--accent);
+}
+
+.site-nav {
+	display: flex;
+	gap: 1.5rem;
+}
+
+.site-nav a {
+	color: var(--ink-soft);
+	text-decoration: none;
+	font-size: 0.95rem;
+	padding-bottom: 2px;
+	border-bottom: 2px solid transparent;
+}
+.site-nav a:hover {
+	color: var(--ink);
+}
+
+/* Applied by BaseLayout to whichever nav link matches the current URL. */
+.site-nav a[aria-current='page'] {
+	color: var(--ink);
+	border-bottom-color: var(--accent);
+}
+
+.site-footer {
+	margin-top: 5rem;
+	padding-block: 2rem;
+	border-top: 1px solid var(--rule);
+	color: var(--ink-soft);
+	font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Blog index
+   ========================================================================== */
+
+.post-list {
+	list-style: none;
+	padding: 0;
+	margin: 2rem 0 0;
+}
+
+.post-list li {
+	padding-block: 1.4rem;
+	border-bottom: 1px solid var(--rule);
+}
+.post-list li:first-child {
+	border-top: 1px solid var(--rule);
+}
+
+.post-list h2 {
+	margin: 0 0 0.3rem;
+	font-size: 1.2rem;
+}
+.post-list h2 a {
+	text-decoration: none;
+	color: var(--ink);
+}
+.post-list h2 a:hover {
+	color: var(--accent);
+}
+
+.post-meta {
+	color: var(--ink-soft);
+	font-size: 0.875rem;
+	margin: 0 0 0.4rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.9rem;
+}
+
+.post-list p:last-child {
+	margin: 0;
+	color: var(--ink-soft);
+	font-size: 0.95rem;
+}
+
+.tag {
+	background: var(--accent-soft);
+	color: var(--accent);
+	padding: 0.1em 0.55em;
+	border-radius: 999px;
+	font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   Single post
+   ========================================================================== */
+
+.post-header {
+	margin-bottom: 2.5rem;
+}
+
+.post-body > :first-child {
+	margin-top: 0;
+}
+
+/* Display equations can be wider than the text column on small screens. */
+.post-body .katex-display {
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding-block: 0.5rem;
+}
+
+/* ==========================================================================
+   Motion
+   --------------------------------------------------------------------------
+   Anything that animates on scroll gets class="reveal". A tiny script in
+   BaseLayout adds .is-visible when the element scrolls into view.
+   ========================================================================== */
+
+.reveal {
+	opacity: 0;
+	transform: translateY(12px);
+	transition:
+		opacity 0.5s ease,
+		transform 0.5s ease;
+}
+
+.reveal.is-visible {
+	opacity: 1;
+	transform: none;
+}
+
+/* Respect the OS "reduce motion" setting. Some people get motion sickness from
+   animation, and this is the standard way to honour that. Always include it. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+	.reveal {
+		opacity: 1;
+		transform: none;
+	}
+}

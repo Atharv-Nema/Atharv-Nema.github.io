@@ -1,0 +1,68 @@
+---
+/**
+ * A callout box for asides, warnings and notes.
+ *
+ * Use inside an .mdx post like:
+ *   <Aside type="warning" title="Careful">
+ *     This only holds when the matrix is positive definite.
+ *   </Aside>
+ */
+interface Props {
+	type?: 'note' | 'warning' | 'tip';
+	title?: string;
+}
+
+const { type = 'note', title } = Astro.props;
+
+const defaultTitles = { note: 'Note', warning: 'Warning', tip: 'Tip' };
+---
+
+<aside class:list={['aside', type]}>
+	<p class="aside-title">{title ?? defaultTitles[type]}</p>
+	<div class="aside-body"><slot /></div>
+</aside>
+
+<style>
+	.aside {
+		margin: 1.75rem 0;
+		padding: 1rem 1.15rem;
+		border-radius: 8px;
+		border: 1px solid var(--rule);
+		border-left-width: 3px;
+		background: var(--surface);
+		font-size: 0.97rem;
+	}
+
+	.aside-title {
+		margin: 0 0 0.4rem;
+		font-weight: 650;
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	.aside-body :global(> :last-child) {
+		margin-bottom: 0;
+	}
+
+	.note {
+		border-left-color: #3b82f6;
+	}
+	.note .aside-title {
+		color: #3b82f6;
+	}
+
+	.warning {
+		border-left-color: #d97706;
+	}
+	.warning .aside-title {
+		color: #d97706;
+	}
+
+	.tip {
+		border-left-color: #059669;
+	}
+	.tip .aside-title {
+		color: #059669;
+	}
+</style>

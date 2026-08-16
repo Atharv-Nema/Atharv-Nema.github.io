@@ -1,0 +1,141 @@
+---
+title: 'How to write posts on this site'
+description: 'A reference post covering LaTeX, interactive figures, callouts and animation — everything the blog supports.'
+pubDate: 2026-08-16
+tags: ['meta']
+---
+
+import Aside from '../../components/Aside.astro';
+import SineWave from '../../components/SineWave.astro';
+
+This post exists to be read *and* to be looked at in source. Open
+`src/content/blog/writing-posts.mdx` alongside it — everything rendered below is
+produced by that one file.
+
+## The basics
+
+Ordinary Markdown works as you'd expect: **bold**, *italic*, `inline code`,
+[links](https://docs.astro.build), and lists.
+
+- Bullet points
+- Another point
+  - Nested, indented by two spaces
+
+> Block quotes look like this.
+
+Code blocks get syntax highlighting automatically, no configuration needed:
+
+```python
+def gradient_descent(f, grad, x0, lr=0.01, steps=1000):
+    x = x0
+    for _ in range(steps):
+        x = x - lr * grad(x)
+    return x
+```
+
+## Mathematics
+
+Write inline maths between single dollars: the complexity of merge sort is
+$O(n \log n)$, and Euler's identity $e^{i\pi} + 1 = 0$ sits in the middle of a
+sentence without disturbing the line height.
+
+Use double dollars for a display equation:
+
+$$
+\frac{\partial}{\partial \theta_j} J(\theta)
+  = \frac{1}{m} \sum_{i=1}^{m} \left( h_\theta(x^{(i)}) - y^{(i)} \right) x_j^{(i)}
+$$
+
+Larger structures work too — matrices, alignments, cases:
+
+$$
+A = \begin{bmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{bmatrix}
+\qquad
+f(n) = \begin{cases}
+  n/2 & \text{if } n \text{ is even} \\
+  3n + 1 & \text{if } n \text{ is odd}
+\end{cases}
+$$
+
+<Aside type="note" title="How this works">
+	The maths is converted to HTML by KaTeX when the site is *built*, not when
+	the page is *loaded*. Visitors download no JavaScript for it, equations never
+	flicker in, and they stay selectable and searchable as text.
+</Aside>
+
+## Callouts
+
+The `<Aside>` component takes a `type` of `note`, `warning` or `tip`, plus an
+optional `title`:
+
+<Aside type="warning" title="Escaping in MDX">
+	MDX treats curly braces as JavaScript. If you need a literal `{` in prose,
+	write it inside backticks or escape it as `\{`. This bites everyone once.
+</Aside>
+
+<Aside type="tip">
+	With no `title`, the type's name is used instead.
+</Aside>
+
+## Interactive figures
+
+This is the part plain Markdown can't do. `<SineWave>` is an ordinary component
+in `src/components/` — some SVG, two range inputs, and about thirty lines of
+vanilla JavaScript:
+
+<SineWave frequency={2} amplitude={30} caption="Frequency and amplitude of a sine wave." />
+
+Because it's a normal component, it takes props, and you can use it more than
+once in a post:
+
+<SineWave frequency={4.5} amplitude={15} caption="The same component, different starting values." />
+
+The pattern generalises: anything you can build with SVG, canvas or the DOM can
+become a figure here. Copy `SineWave.astro`, change the drawing code, import it,
+use it.
+
+## Animation on scroll
+
+Add `class="reveal"` to any element and it fades upward into view as the reader
+reaches it. The observer that does this lives in `src/layouts/BaseLayout.astro`:
+
+<div class="reveal">
+	<Aside type="tip" title="This one faded in">
+		Scroll up and back down to watch it again — though it only animates once
+		per page load, deliberately.
+	</Aside>
+</div>
+
+It also respects the operating system's *reduce motion* accessibility setting,
+which turns the animation off for readers who need that.
+
+## Frontmatter
+
+Every post starts with a block between `---` fences:
+
+```yaml
+---
+title: 'How to write posts on this site'
+description: 'Shown on the blog index and in link previews.'
+pubDate: 2026-08-16
+tags: ['meta']
+draft: false
+---
+```
+
+`title`, `description` and `pubDate` are required — the build fails and names
+the offending file if one is missing, so a broken post can never quietly reach
+the live site. `tags` and `draft` are optional. Setting `draft: true` keeps a
+post off the site entirely while you work on it.
+
+## Adding a post
+
+Create a file in `src/content/blog/`. The filename becomes the URL, so
+`monte-carlo.mdx` is served at `/blog/monte-carlo`. Use the `.mdx` extension if
+you want components or callouts, and plain `.md` if the post is only prose and
+maths. Nothing else to register — the index page picks it up automatically.

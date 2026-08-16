@@ -1,0 +1,122 @@
+---
+/**
+ * One page per blog post.
+ *
+ * The square brackets in the filename make this a *dynamic route*: rather than
+ * one page, it's a template. `getStaticPaths` returns the list of posts, and
+ * Astro builds a separate static HTML file for each one at build time.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { href } from '../../lib/urls';
+
+// KaTeX ships the stylesheet that makes rendered maths look like maths.
+// It's imported here rather than in BaseLayout so that pages without equations
+// don't pay for it.
+import 'katex/dist/katex.min.css';
+
+export async function getStaticPaths() {
+	const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+	);
+
+	return posts.map((post, i) => ({
+		params: { id: post.id },
+		props: {
+			post,
+			// Posts are newest-first, so the *next* item is the older one.
+			newer: i > 0 ? posts[i - 1] : null,
+			older: i < posts.length - 1 ? posts[i + 1] : null,
+		},
+	}));
+}
+
+const { post, newer, older } = Astro.props;
+
+// `render` turns the Markdown/MDX body into a component we can drop into the
+// page below as <Content />.
+const { Content } = await render(post);
+
+const dateFmt = new Intl.DateTimeFormat('en-GB', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+});
+---
+
+<BaseLayout title={`${post.data.title} — Atharv Nema`} description={post.data.description}>
+	<article>
+		<header class="post-header">
+			<h1>{post.data.title}</h1>
+			<p class="post-meta">
+				<time datetime={post.data.pubDate.toISOString()}>
+					{dateFmt.format(post.data.pubDate)}
+				</time>
+				{
+					post.data.updatedDate && (
+						<span>updated {dateFmt.format(post.data.updatedDate)}</span>
+					)
+				}
+				{post.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+			</p>
+		</header>
+
+		<div class="post-body">
+			<Content />
+		</div>
+	</article>
+
+	<nav class="post-nav">
+		{
+			older && (
+				<a class="prev" href={href(`/blog/${older.id}`)}>
+					<span>&larr; Older</span>
+					{older.data.title}
+				</a>
+			)
+		}
+		{
+			newer && (
+				<a class="next" href={href(`/blog/${newer.id}`)}>
+					<span>Newer &rarr;</span>
+					{newer.data.title}
+				</a>
+			)
+		}
+	</nav>
+</BaseLayout>
+
+<style>
+	.post-nav {
+		display: flex;
+		gap: 1.5rem;
+		justify-content: space-between;
+		margin-top: 4rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--rule);
+	}
+
+	.post-nav a {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		text-decoration: none;
+		color: var(--ink);
+		font-size: 0.95rem;
+		max-width: 45%;
+	}
+
+	.post-nav a:hover {
+		color: var(--accent);
+	}
+
+	.post-nav span {
+		color: var(--ink-soft);
+		font-size: 0.825rem;
+	}
+
+	.post-nav .next {
+		margin-left: auto;
+		text-align: right;
+	}
+</style>
