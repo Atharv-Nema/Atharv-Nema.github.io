@@ -47,7 +47,12 @@ const here = Astro.url.pathname;
 	<body>
 		<header class="site-header">
 			<div class="wrap">
-				<a class="site-title" href={href('/')}>Atharv Nema</a>
+				{/* A monogram, so the header stays quiet. The aria-label keeps the
+				    full name for screen readers, which would otherwise announce
+				    the link as the letters "AN". */}
+				<a class="site-title" href={href('/')} aria-label="Atharv Nema — home">
+					AN
+				</a>
 				<nav class="site-nav">
 					{
 						nav.map((item) => (

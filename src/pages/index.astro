@@ -14,27 +14,60 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 	month: 'short',
 	day: 'numeric',
 });
+
+// What is being worked on, in the order it will happen. Edit this list and the
+// section below updates.
+//   when — the date column. A rough timeframe like 'Sep 2026' is fine; these
+//          are placeholders, so replace them with your real targets.
+//   kind — the tag after the title: 'writing' for a post, 'site' for a change
+//          to this website. Adding a new kind means adding one rule in .tag.
+//   note — optional; one line of context under the title.
+const roadmap = [
+	{
+		when: 'Sep 2026',
+		kind: 'writing',
+		title: 'The tyranny of the rocket equation',
+		note: 'Currently drafting.',
+	},
+	{
+		when: 'Oct 2026',
+		kind: 'site',
+		title: 'Direct commenting on posts',
+		note: 'Currently, there is substantial operational overhead associated with giving feedback. Direct commenting on blogs will reduce this overhead.',
+	},
+];
 ---
 
 <BaseLayout title="Atharv Nema">
-	<h1>Atharv Nema</h1>
+	<div class="intro">
+		<h1>Hello, I am <span class="intro-name">Atharv Nema</span>.</h1>
+		<p>
+			I am a Masters student studying Computer Science. I am interested in Computer
+			Science, Mathematics, Physics and Philosophy.
+		</p>
+	</div>
 
-	{/* TODO: replace this with a real one-line description of yourself. */}
-	<p style="font-size: 1.15rem; color: var(--ink-soft);">
-		TODO — one sentence on who you are and what you work on.
-	</p>
-
-	<h2>About</h2>
+	<h2>About this page</h2>
 	<p>
-		TODO — a couple of paragraphs. What you study or work on, what problems
-		you find interesting, what you have built.
+		Currently, the main purpose of this site is to host my blog. I plan to write about any topic that interests me. Feedback on my blogs and my website are greatly appreciated. You can send feedback through the contact page.
 	</p>
 
-	<h2>Currently</h2>
-	<ul>
-		<li>TODO — something you are working on</li>
-		<li>TODO — something you are learning</li>
-		<li>TODO — something you are reading</li>
+	<h2>Work in progress</h2>
+	<ul class="roadmap">
+		{
+			roadmap.map((item) => (
+				<li>
+					<span class="roadmap-when">{item.when}</span>
+					<div>
+						<p class="roadmap-title">
+							{item.title}
+							<span class={`roadmap-tag is-${item.kind}`}>{item.kind}</span>
+						</p>
+						{item.note && <p class="roadmap-note">{item.note}</p>}
+					</div>
+				</li>
+			))
+		}
 	</ul>
 
 	{
@@ -63,3 +96,122 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 		)
 	}
 </BaseLayout>
+
+<style>
+	/* The opening block: centred text on a raised panel. The surface + border
+	   is what sets the intro apart from the sections below — no title needed. */
+	.intro {
+		text-align: center;
+		background: var(--surface);
+		border: 1px solid var(--rule);
+		border-radius: 10px;
+		padding: 2.25rem 1.75rem;
+		margin-bottom: 3.5rem;
+	}
+
+	/* The h1 is a sentence, not a title, so it is set at reading weight and a
+	   size that sits above body copy rather than shouting. */
+	.intro h1 {
+		font-size: clamp(1.4rem, 1.1rem + 1.3vw, 1.8rem);
+		font-weight: 400;
+		line-height: 1.4;
+		letter-spacing: 0;
+		color: var(--ink);
+		margin: 0 0 0.75rem;
+		text-wrap: balance; /* keeps the centred line from breaking lopsided */
+	}
+
+	.intro p {
+		color: var(--ink-soft);
+		max-width: 30rem; /* centred text is hard to read across a full column */
+		margin: 0 auto;
+		text-wrap: pretty;
+	}
+
+	/* Weight alone — no colour, no underline. It only has to be the first thing
+	   the eye lands on, and everything around it is already quiet. */
+	.intro-name {
+		font-weight: 650;
+	}
+
+	/* ---- Work in progress ------------------------------------------------
+	   Rows separated by hairlines, same as the post list and the contact page,
+	   with the date in a fixed column on the left so the titles all line up
+	   down the page. The date alone carries the ordering — no status labels. */
+	.roadmap {
+		list-style: none;
+		padding: 0;
+		margin: 1.5rem 0 0;
+	}
+
+	.roadmap li {
+		display: grid;
+		grid-template-columns: 6rem 1fr;
+		gap: 0 1.25rem;
+		padding-block: 1rem;
+		border-bottom: 1px solid var(--rule);
+	}
+	.roadmap li:first-child {
+		border-top: 1px solid var(--rule);
+	}
+
+	/* Mono keeps the dates the same width, so the column reads as a column. */
+	.roadmap-when {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--ink-soft);
+		padding-top: 0.25rem; /* optically aligns it with the title's first line */
+		white-space: nowrap;
+	}
+
+	.roadmap-title {
+		margin: 0;
+		font-weight: 600;
+		line-height: 1.45;
+	}
+
+	/* The type tag, inline after the title. Colour does the sorting: writing
+	   takes the accent, site work stays neutral, so a glance down the list
+	   separates posts from changes to the site itself. */
+	.roadmap-tag {
+		display: inline-block;
+		margin-left: 0.5rem;
+		vertical-align: 0.1em;
+		font-size: 0.7rem;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.07em;
+		padding: 0.15em 0.6em;
+		border-radius: 999px;
+		border: 1px solid transparent;
+		white-space: nowrap;
+	}
+	.roadmap-tag.is-writing {
+		background: var(--accent-soft);
+		color: var(--accent);
+	}
+	.roadmap-tag.is-site {
+		background: var(--surface);
+		color: var(--ink-soft);
+		border-color: var(--rule);
+	}
+
+	.roadmap-note {
+		margin: 0.2rem 0 0;
+		color: var(--ink-soft);
+		font-size: 0.95rem;
+	}
+
+	/* On narrow screens the card's side padding eats too much of the column,
+	   and the roadmap's date column stops fitting beside the text. */
+	@media (max-width: 34rem) {
+		.intro {
+			padding: 1.75rem 1.25rem;
+		}
+
+		.roadmap li {
+			grid-template-columns: 1fr;
+			gap: 0.3rem;
+		}
+	}
+</style>

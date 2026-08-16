@@ -2,12 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 // Edit this list and the page updates. Delete any row you don't want.
-// `note` is optional.
+// `value` is the text shown; `url` is where it goes.
 const links = [
 	{ label: 'Email', value: 'atharvnema12@gmail.com', url: 'mailto:atharvnema12@gmail.com' },
-	{ label: 'GitHub', value: '@Atharv-Nema', url: 'https://github.com/Atharv-Nema' },
-	{ label: 'LinkedIn', value: 'TODO', url: '#', note: 'add your profile URL' },
-	{ label: 'Twitter / X', value: 'TODO', url: '#', note: 'or delete this row' },
+	{ label: 'GitHub', value: 'Atharv-Nema', url: 'https://github.com/Atharv-Nema' },
+	{ label: 'LinkedIn', value: 'atharv-nema', url: 'https://www.linkedin.com/in/atharv-nema/' }
 ];
 ---
 
@@ -18,8 +17,9 @@ const links = [
 	<h1>Contact</h1>
 
 	<p>
-		TODO — a line about what you would like to be contacted regarding, and
-		roughly how quickly you reply.
+		Feedback on my posts is the thing I most want to hear about: corrections,
+		disagreements, or anything I have explained badly. Questions about my
+		blogs or my background are welcome too, as is anything else.
 	</p>
 
 	<dl class="contact-list">
@@ -28,12 +28,7 @@ const links = [
 				<div class="contact-row">
 					<dt>{link.label}</dt>
 					<dd>
-						{link.url === '#' ? (
-							<span class="pending">{link.value}</span>
-						) : (
-							<a href={link.url}>{link.value}</a>
-						)}
-						{link.note && <span class="note"> — {link.note}</span>}
+						<a href={link.url}>{link.value}</a>
 					</dd>
 				</div>
 			))
@@ -43,7 +38,7 @@ const links = [
 
 {/*
   A <style> block inside a .astro file is automatically SCOPED: these rules only
-  ever apply to this page, so you can use a plain class name like `.note`
+  ever apply to this page, so you can use a plain class name like `.contact-row`
   without worrying that it collides with something elsewhere in the site.
   Site-wide rules belong in src/styles/global.css instead.
 */}
@@ -73,15 +68,6 @@ const links = [
 
 	dd {
 		margin: 0;
-	}
-
-	.pending {
-		color: var(--ink-soft);
-	}
-
-	.note {
-		color: var(--ink-soft);
-		font-size: 0.875rem;
 	}
 
 	/* Below 34rem wide, stack the label above the value instead of beside it. */
