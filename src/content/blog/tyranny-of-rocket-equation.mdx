@@ -1,0 +1,62 @@
+---
+title: 'The tyranny of the rocket equation'
+description: 'Why getting anywhere in space costs so much more fuel than it seems it should — and what, if anything, can be done about it.'
+pubDate: 2026-08-16
+tags: ['physics']
+---
+
+import Aside from '../../components/Aside.astro';
+import RocketMomentum from '../../components/RocketMomentum.astro';
+
+In 2013, India sent a probe to Mars called Mangalyaan, and it took nine months to arrive. I always wondered why we couldn't just add more fuel and go faster. Fuel isn't exotic, and surely the saved time is worth the extra cost. This reasoning is flawed, however. There is an inherent assuption that fuel and velocity are roughly linear. It becomes apparent very quickly that this is not true: energy and fuel are linear, but energy and velocity of the rocket are not ($KE = \frac{1}{2}mv^2$). However, the situation is much much worse than what this quadratic relation suggests. This is the tyranny of the rocket equation that we will explore in this blog.
+
+
+<Aside type="note" title="A disclaimer">
+	I am not a rocket scientist and my physics knowledge is limited. Parts of this are certainly simplified and some of it may be wrong. If you spot an error or have a suggestion, please [get in touch](/contact).
+</Aside>
+
+## How a rocket moves
+
+A rocket is a payload strapped to a tank of fuel, with a nozzle at one end. It burns the fuel and uses the energy released to throw the burnt fuel (exhaust) out of the nozzle at a very high speed. By the third law of motion, the exhaust pushes back: the rest of the vehicle gains velocity in the opposite direction of ejection. The thing to note here is that "rest of the vehicle" is not just the payload, but also the fuel that has not been burnt yet.
+
+<RocketMomentum />
+
+Interact with the simulation above. Every puff is the same mass and leaves at the same speed, so every puff delivers the same momentum. But the speed each puff buys grows, because the rocket being pushed keeps getting lighter. The last puff is worth roughly eight times the first. This explains why simply adding more fuel is impractical. Any extra fuel sits at the beginning of the curve, where its efficiency is lowest because its energy is wasted on pushing the mass of the unburned fuel ahead of it.
+
+## Deriving the rocket equation
+
+Let us make this precise. The goal is to derive the relation between the mass of the fuel and the speed of the payload after all the fuel has been burnt. For simplicity, we will make the following assumptions:
+- The rocket is in a vacuum, so we can ignore drag.
+- The rocket is not in a gravitational field.
+- The speed of the fuel leaving the nozzle relative to the rocket is constant.
+
+Say the total mass is $m$. In a short interval, it ejects a mass $dm$ at speed $v_e$ backwards, and picks up a small forward speed $dv$ By conservation of momentum, we have:
+$$
+\underbrace{m\,dv}_{\text{rocket}} \;=\; \underbrace{-dm\,v_e}_{\text{exhaust}}
+$$
+
+This formalises our intuition: a fixed amount of propellant buys a speed increment inversely proportional to the mass it has to push. Separating and integrating from the fully fuelled mass $m_0$ to the mass of the payload $m_p$:
+
+$$
+\int_0^{\Delta v} dv = -v_e \int_{m_0}^{m_p} \frac{dm}{m}
+\qquad\Longrightarrow\qquad
+\Delta v = v_e \ln\!\left(\frac{m_0}{m_p}\right)
+$$
+
+Writing the mass in terms of $\Delta v$:
+
+$$
+m_0 = m_p\, e^{\Delta v / v_e}
+$$
+
+This reveals the problem. The propellant required is exponential in the speed you want!
+
+## Beating the tyranny
+
+Exponentials grow insanely large very quickly. Increasing the velocity by a small amount requires a huge amount of fuel. This is a fundamental problem of vehicles that carry their own fuel. There are a few ways to alleviate/get around this problem.
+
+**Steal momentum:** A gravity assist borrows velocity from a planet's orbit around the Sun, without any loss of fuel. The Parker Solar Probe is the most spectacular user of the trick. It orbits the Sun, and getting close to the Sun is expensive: you have to shed the $30\ \text{km/s}$ of orbital speed inherited from Earth. Parker shed its speed gradually, using Venus for seven separate gravity assists. At closest approach to the Sun, Parker travels at nearly $200\ \text{km/s}$, the fastest any human-made probe has moved.
+
+**Throw the exhaust much faster:** The exponent is $\Delta v / v_e$, so $v_e$ scales linearly with $\Delta v$ (holding the fuel mass constant). A higher $v_e$ is therefore extremely valuable. Ion drives are an example. They accelerate xenon ions electrically rather than thermally, sidestepping the chemical energy ceiling. Their exhaust speeds are $30\text{--}40\ \text{km/s}$, an order of magnitude past kerosene.
+
+**Don't carry the propellant at all:** The tyranny comes entirely from the fact that the energy source rides along and must itself be accelerated. If the energy can be supplied externally, the exponential disappears and the energy spent returns to being quadratic in the speed of the payload. One idea is a mass driver, which accelerates the payload electromagnetically along a track, leaving the power supply bolted to the ground. Nothing has ever been launched into space this way though, as reaching orbital speed demands either a track hundreds of kilometres long or accelerations of thousands of $g$.

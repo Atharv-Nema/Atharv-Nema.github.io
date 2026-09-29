@@ -1,0 +1,301 @@
+---
+/**
+ * An animated figure for the "how a rocket works" section.
+ *
+ * A rocket burns identical puffs of fuel, one after another. Each puff
+ * leaves at the same exhaust speed, so each carries the same momentum — but
+ * the rocket it pushes gets lighter every time. The bar chart underneath
+ * records the speed gain from each puff, and the bars grow: the last puff is
+ * worth several times the first.
+ *
+ * That is the whole intuition behind the rocket equation, before any algebra:
+ * early fuel is mostly spent accelerating later fuel.
+ *
+ *   <RocketMomentum />
+ */
+interface Props {
+	/** How many equal puffs the fuel is divided into. */
+	puffs?: number;
+	/** Fuel mass as a multiple of the payload mass (payload = 1). */
+	fuel?: number;
+	caption?: string;
+}
+
+const { puffs = 18, fuel = 9, caption } = Astro.props;
+
+const puffMass = fuel / puffs;
+const trim = (n: number) => String(Number(n.toFixed(2)));
+
+const figureCaption =
+	caption ??
+	`The rocket is 1 unit of payload and ${trim(fuel)} units of fuel: it leaves ` +
+		`the pad at ${trim(1 + fuel)} units and ends at 1. The fuel burns as ${puffs} ` +
+		`identical puffs of ${trim(puffMass)} units, each leaving the nozzle at the same exhaust speed vₑ`;
+---
+
+<figure class="figure" data-momentum data-puffs={puffs} data-fuel={fuel}>
+	<svg viewBox="0 0 420 210" role="img" aria-label="A rocket ejecting successive puffs of fuel, with a bar chart of the speed gained from each">
+		<!-- ============ the rocket ============ -->
+		<g data-rocket>
+			<!-- tank outline -->
+			<rect x="240" y="56" width="110" height="38" rx="4" class="hull"></rect>
+			<!-- fuel remaining; its width is rewritten by the script -->
+			<rect x="243" y="59" width="104" height="32" rx="2" class="fuel" data-fuel-level></rect>
+			<!-- payload nose cone -->
+			<polygon points="350,56 386,75 350,94" class="payload"></polygon>
+		</g>
+
+		<!-- exhaust puffs are inserted here by the script -->
+		<g data-exhaust></g>
+
+		<text x="368" y="110" class="tick-label" text-anchor="middle">payload</text>
+		<text x="295" y="110" class="tick-label" text-anchor="middle">fuel</text>
+
+		<!-- ============ per-puff speed gain ============ -->
+		<line x1="34" y1="196" x2="392" y2="196" class="axis"></line>
+		<g data-bars></g>
+		<text x="34" y="142" class="axis-label">speed gained</text>
+		<text x="34" y="154" class="axis-label">per puff</text>
+	</svg>
+
+	<div class="readout">
+		<span>burnt <b data-burnt>0.0</b> / {fuel.toFixed(1)}</span>
+		<span>speed <b data-speed>0.00</b> × v<sub>e</sub></span>
+	</div>
+
+	<div class="controls">
+		<button type="button" data-play>Play</button>
+		<button type="button" data-step>Burn one puff</button>
+		<button type="button" data-reset>Reset</button>
+	</div>
+
+	<figcaption>{figureCaption}</figcaption>
+</figure>
+
+<script>
+	const SVG_NS = 'http://www.w3.org/2000/svg';
+
+	document.querySelectorAll<HTMLElement>('[data-momentum]').forEach((root) => {
+		const nPuffs = Number(root.dataset.puffs);
+		const fuel = Number(root.dataset.fuel);
+
+		const fuelRect = root.querySelector<SVGRectElement>('[data-fuel-level]')!;
+		const exhaustGroup = root.querySelector<SVGGElement>('[data-exhaust]')!;
+		const barsGroup = root.querySelector<SVGGElement>('[data-bars]')!;
+		const burntOut = root.querySelector<HTMLElement>('[data-burnt]')!;
+		const speedOut = root.querySelector<HTMLElement>('[data-speed]')!;
+		const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+		const stepBtn = root.querySelector<HTMLButtonElement>('[data-step]')!;
+		const resetBtn = root.querySelector<HTMLButtonElement>('[data-reset]')!;
+
+		// Payload is 1, so the rocket starts at mass 1 + fuel and ends at 1.
+		const puffMass = fuel / nPuffs;
+		const startMass = 1 + fuel;
+
+		// Speed gain from puff i (0-indexed), in units of the exhaust speed:
+		// dv = ln(m_before / m_after). Precomputed so the tallest bar can set
+		// the vertical scale up front.
+		const gains = Array.from({ length: nPuffs }, (_, i) => {
+			const before = startMass - i * puffMass;
+			return Math.log(before / (before - puffMass));
+		});
+		const maxGain = Math.max(...gains);
+
+		// Bar chart geometry, in viewBox units.
+		const X0 = 40;
+		const X1 = 392;
+		const BASE = 196;
+		const MAX_H = 52;
+		const slot = (X1 - X0) / nPuffs;
+		const barW = Math.max(2, slot - 3);
+
+		let burnt = 0; // puffs burnt so far
+		let timer: number | null = null;
+
+		function render() {
+			const fracLeft = 1 - burnt / nPuffs;
+			fuelRect.setAttribute('width', (104 * fracLeft).toFixed(1));
+
+			const speed = gains.slice(0, burnt).reduce((a, b) => a + b, 0);
+			burntOut.textContent = (burnt * puffMass).toFixed(1);
+			speedOut.textContent = speed.toFixed(2);
+
+			barsGroup.replaceChildren();
+			for (let i = 0; i < burnt; i++) {
+				const h = (gains[i] / maxGain) * MAX_H;
+				const bar = document.createElementNS(SVG_NS, 'rect');
+				bar.setAttribute('x', (X0 + i * slot).toFixed(1));
+				bar.setAttribute('y', (BASE - h).toFixed(1));
+				bar.setAttribute('width', barW.toFixed(1));
+				bar.setAttribute('height', h.toFixed(1));
+				bar.setAttribute('rx', '1');
+				bar.setAttribute('class', 'bar');
+				barsGroup.appendChild(bar);
+			}
+
+			stepBtn.disabled = burnt >= nPuffs;
+		}
+
+		/** Fling one puff of exhaust out of the back of the rocket. */
+		function emitPuff() {
+			const puff = document.createElementNS(SVG_NS, 'circle');
+			puff.setAttribute('cy', (75 + (Math.random() - 0.5) * 9).toFixed(1));
+			puff.setAttribute('r', (4 + Math.random() * 3).toFixed(1));
+			puff.setAttribute('class', 'puff');
+			exhaustGroup.appendChild(puff);
+
+			const start = performance.now();
+			const DURATION = 900;
+
+			function frame(now: number) {
+				const t = Math.min(1, (now - start) / DURATION);
+				puff.setAttribute('cx', (236 - t * 210).toFixed(1));
+				puff.setAttribute('opacity', (1 - t).toFixed(2));
+				if (t < 1) requestAnimationFrame(frame);
+				else puff.remove();
+			}
+			requestAnimationFrame(frame);
+		}
+
+		function step() {
+			if (burnt >= nPuffs) return false;
+			burnt++;
+			emitPuff();
+			render();
+			return true;
+		}
+
+		function stop() {
+			if (timer !== null) clearInterval(timer);
+			timer = null;
+			playBtn.textContent = 'Play';
+		}
+
+		function play() {
+			if (burnt >= nPuffs) reset();
+			timer = window.setInterval(() => {
+				if (!step()) stop();
+			}, 420);
+			playBtn.textContent = 'Pause';
+		}
+
+		function reset() {
+			stop();
+			burnt = 0;
+			exhaustGroup.replaceChildren();
+			render();
+		}
+
+		playBtn.addEventListener('click', () => (timer === null ? play() : stop()));
+		stepBtn.addEventListener('click', () => {
+			stop();
+			step();
+		});
+		resetBtn.addEventListener('click', reset);
+
+		render();
+	});
+</script>
+
+<style>
+	.figure {
+		margin: 2rem 0;
+		padding: 1rem;
+		border: 1px solid var(--rule);
+		border-radius: 8px;
+		background: var(--surface);
+	}
+
+	svg {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
+	.hull {
+		fill: none;
+		stroke: var(--ink-soft);
+		stroke-width: 1.5;
+	}
+
+	.fuel {
+		fill: var(--accent);
+		opacity: 0.75;
+	}
+
+	.payload {
+		fill: var(--ink);
+	}
+
+	.axis {
+		stroke: var(--rule);
+		stroke-width: 1;
+	}
+
+	/* Puffs and bars are created by the script, so they carry no scoping
+	   attribute — kept under the scoped .figure so nothing leaks out. */
+	.figure :global(.puff) {
+		fill: var(--accent);
+	}
+
+	.figure :global(.bar) {
+		fill: var(--accent);
+		opacity: 0.75;
+	}
+
+	.axis-label,
+	.tick-label {
+		fill: var(--ink-soft);
+		font-size: 9px;
+		font-family: var(--font-body);
+	}
+
+	.readout {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1.5rem;
+		margin-top: 0.6rem;
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+
+	.readout b {
+		font-family: var(--font-mono);
+		font-weight: 500;
+		color: var(--ink);
+	}
+
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+	}
+
+	button {
+		font: inherit;
+		font-size: 0.82rem;
+		padding: 0.3rem 0.75rem;
+		border: 1px solid var(--rule);
+		border-radius: 999px;
+		background: var(--bg);
+		color: var(--ink);
+		cursor: pointer;
+	}
+
+	button:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	button:disabled {
+		opacity: 0.45;
+		cursor: default;
+	}
+
+	figcaption {
+		margin-top: 0.75rem;
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+</style>

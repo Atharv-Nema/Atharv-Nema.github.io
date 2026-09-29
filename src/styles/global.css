@@ -280,6 +280,41 @@ hr {
 	padding-block: 0.5rem;
 }
 
+/* Tables scroll inside their own box rather than widening the whole page. */
+.post-body table {
+	display: block;
+	overflow-x: auto;
+	width: 100%;
+	border-collapse: collapse;
+	margin-block: 1.75rem;
+	font-size: 0.92rem;
+}
+
+.post-body th,
+.post-body td {
+	padding: 0.5rem 0.9rem 0.5rem 0;
+	text-align: left;
+	border-bottom: 1px solid var(--rule);
+	white-space: nowrap;
+}
+
+.post-body th {
+	font-weight: 600;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--ink-soft);
+	border-bottom-color: var(--ink-soft);
+}
+
+/* Numeric columns read far better right-aligned; opt in per column with
+   the Markdown alignment syntax (`| ---: |`). */
+.post-body td[align='right'],
+.post-body th[align='right'] {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
 /* ==========================================================================
    Motion
    --------------------------------------------------------------------------
